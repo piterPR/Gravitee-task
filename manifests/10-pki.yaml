@@ -1,0 +1,58 @@
+# Local PKI: self-signed root CA -> CA issuer -> gateway certificate.
+# Production: replace the "gravitee-ca" issuer with an ACME (Let's Encrypt) issuer,
+# see README. The Certificate below stays the same, only issuerRef changes.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gravitee-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: gravitee-local-ca
+  secretName: gravitee-ca
+  duration: 87600h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: gravitee-ca
+spec:
+  ca:
+    secretName: gravitee-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-tls
+  namespace: gravitee
+spec:
+  secretName: gateway-tls
+  dnsNames:
+    - localhost
+  ipAddresses:
+    - 127.0.0.1
+  duration: 2160h    # 90d, same as Let's Encrypt
+  renewBefore: 720h  # renew 30d before expiry
+  # The gateway's PEM loader needs a PKCS8 key and assumes RSA: it rejects both the
+  # default SEC1 ("EC PRIVATE KEY") format and ECDSA keys, so use RSA + PKCS8.
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    encoding: PKCS8
+    rotationPolicy: Always
+  issuerRef:
+    name: gravitee-ca
+    kind: ClusterIssuer

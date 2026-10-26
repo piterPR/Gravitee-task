@@ -1,0 +1,45 @@
+# Stored by GKO in a local ConfigMap (definitionContext.syncFrom: KUBERNETES),
+# loaded by the DB-less gateway.
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: ping
+  namespace: gravitee
+spec:
+  name: ping
+  description: GET /ping proxied to the pong backend
+  version: "1.0"
+  type: PROXY
+  state: STARTED
+  # Emit request metrics; they are only stored when the Elasticsearch reporter is on
+  # (`make up-analytics`), otherwise this costs nothing.
+  analytics:
+    enabled: true
+  definitionContext:
+    origin: KUBERNETES
+    syncFrom: KUBERNETES
+  listeners:
+    - type: HTTP
+      paths:
+        - path: /ping
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+          configuration: {}
+  endpointGroups:
+    - name: default
+      type: http-proxy
+      endpoints:
+        - name: pong
+          type: http-proxy
+          inheritConfiguration: false
+          configuration:
+            target: http://pong.gravitee.svc.cluster.local:80
+  plans:
+    keyless:
+      name: Keyless
+      security:
+        type: KEY_LESS
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false

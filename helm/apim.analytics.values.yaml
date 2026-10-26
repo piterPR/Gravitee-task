@@ -1,0 +1,18 @@
+# Overlay for `make up-analytics`: the gateway ships analytics to Elasticsearch.
+# The password is not here: make passes it with --set es.security.password.
+es:
+  enabled: true
+  endpoints:
+    - http://elasticsearch.gravitee.svc.cluster.local:9200
+  index: gravitee
+  settings:
+    number_of_shards: 1
+    number_of_replicas: 0
+  security:
+    enabled: true
+    username: elastic
+
+gateway:
+  reporters:
+    elasticsearch:
+      enabled: true

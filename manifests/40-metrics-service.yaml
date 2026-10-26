@@ -1,0 +1,18 @@
+# Internal-only (ClusterIP) Service for the gateway technical API / Prometheus
+# endpoint, kept apart from the public NodePort Service on purpose.
+# Scrape: GET :18082/_node/metrics/prometheus with basic auth (user admin,
+# password in Secret gateway-metrics).
+apiVersion: v1
+kind: Service
+metadata:
+  name: apim-gateway-metrics
+  namespace: gravitee
+spec:
+  selector:
+    app.kubernetes.io/name: apim
+    app.kubernetes.io/instance: apim
+    app.kubernetes.io/component: gateway
+  ports:
+    - name: metrics
+      port: 18082
+      targetPort: 18082

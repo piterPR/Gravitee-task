@@ -1,0 +1,23 @@
+# GKO: reconciles ApiV4Definition CRs into ConfigMaps that the DB-less gateway reads.
+manager:
+  scope:
+    # Least privilege: watch only the release namespace.
+    cluster: false
+  replicas: 1
+  # Needed to pass the namespace's "restricted" Pod Security level.
+  pod:
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+# Not used: the gateway is not an ingress / Gateway API controller here.
+ingress:
+  controller:
+    enabled: false
